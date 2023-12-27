@@ -1,104 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:localization_with_getx/Languages.dart';
-import 'package:localization_with_getx/localization/translation_keys.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'countryCode.dart';
-import 'languageCode.dart';
 
-import 'localization/languageConstants.dart';
 
 void main() {
-  SharedPreferences.setMockInitialValues({});
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-  static void setLocale(BuildContext context, Locale newLocale) async {
-    _MyAppState state = context.findAncestorStateOfType<_MyAppState>()!;
-    state.setLocale(newLocale);
-  }
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  Locale? _locale;
-
-  setLocale(Locale locale) {
-    setState(() {
-      _locale = locale;
-    });
-  }
-  @override
-  void didChangeDependencies() {
-    getLocale().then((locale) {
-      setState(() {
-        _locale = locale;
-      });
-    });
-    super.didChangeDependencies();
-  }
-
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(statusBarColor: Colors.black45),
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      translations: LocaleString(),
+      locale: const Locale('en', 'US'),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(),
     );
-    if (_locale == null) {
-      return Container(
-        color: Colors.white,
-        child: const Center(
-          child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.black45)),
-        ),
-      );
-    }else {
-      return GetMaterialApp(
-        translations: Languages(),
-        fallbackLocale: Locale('en', 'AR'),
-        locale: _locale,
-        supportedLocales: [
-          Locale(LanguageCode.ENGLISH.getKey, CountryCode.US.getKey),
-          Locale(LanguageCode.ARABIC.getKey, CountryCode.SA.getKey),
-        ],
-
-        // localizationsDelegates: [
-        //   AppLocalizations.delegate,
-        //   GlobalMaterialLocalizations.delegate,
-        //   GlobalWidgetsLocalizations.delegate,
-        //   GlobalCupertinoLocalizations.delegate
-        // ],
-        localeResolutionCallback: (locale, supportedLocales) {
-          for (var supportedLocale in supportedLocales) {
-            if (supportedLocale.languageCode == locale!.languageCode || //&& edit
-                supportedLocale.countryCode == locale.countryCode) {
-              return supportedLocale;
-            }
-          }
-          return supportedLocales.first;
-        },
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const MyHomePage(title: 'Flutter Demo Home Page'),
-      );
-    }
-
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class LocaleString extends Translations {
+  @override
+  Map<String, Map<String, String>> get keys => {
+    'en_US': {
+      'hello': 'Hello World',
+      'hint_text': 'You have pushed the button this many times',
+      'change_language': 'Choose Your Language',
+      'increment': 'Increment'
+    },
+    'hi_IN': {
+      'hello': 'नमस्ते दुनिया',
+      'hint_text': 'आपने कई बार यह बटन दबाया है',
+      'change_language': 'अपनी भाषा चुनिए',
+      'increment': 'वृद्धि'
+    },
+    'ar_SA': {
+      'hello': 'مرحبا بالعالم',
+      'hint_text': 'لقد ضغطت على الزر عدة مرات',
+      'change_language': 'اختر لغتك',
+      'increment': 'زيادة راتب'
+    }
+  };
+}
 
-  final String title;
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -107,45 +57,93 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  final List locale = [
+    {'name': 'ENGLISH', 'locale': const Locale('en', 'US')},
+    {'name': 'हिंदी', 'locale': const Locale('hi', 'IN')},
+    {'name': 'Arabic', 'locale': const Locale('ar', 'SA')},
+  ];
+
   void _incrementCounter() {
     setState(() {
       _counter++;
     });
   }
 
+  updateLanguage(Locale locale) {
+    Get.back();
+    Get.updateLocale(locale);
+  }
+
+  buildLanguageDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (builder) {
+          return AlertDialog(
+            title: Text('change_language'.tr),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.separated(
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    return InkWell(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(locale[index]['name']),
+                      ),
+                      onTap: () {
+                        //print(locale[index]['name']);
+                        updateLanguage(locale[index]['locale']);
+                      },
+                    );
+                  },
+                  separatorBuilder: (context, index) {
+                    return const Divider(
+                      color: Colors.blue,
+                    );
+                  },
+                  itemCount: locale.length),
+            ),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(TranslationKeys.hello.tr),
+        title: Text('hello'.tr),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-             Text(
-              'hello'.tr,
+            Text(
+              'hint_text'.tr,
             ),
-            OutlinedButton(onPressed: (){
-              Get.updateLocale(Locale('en', 'US'));
-            }, child: Icon(Icons.translate)),
-            OutlinedButton(onPressed: (){
-              Get.updateLocale(Locale('en', 'AR'));
-            }, child: Icon(Icons.translate)),
             Text(
               '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context).textTheme.headline4,
+            ),
+            const SizedBox(
+              height: 20.0,
+            ),
+            SizedBox(
+              height: 55.0,
+              width: 220.0,
+              child: ElevatedButton(
+                  onPressed: () {
+                    buildLanguageDialog(context);
+                  },
+                  child: Text('change_language'.tr)),
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        tooltip: 'increment'.tr,
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
