@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:localization_with_getx/locale_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
-void main() {
-  runApp(const MyApp());
+void main() async{
+  await GetStorage.init();
+  await SharedPreferences.getInstance();
+  final LocaleController localeController = Get.put(LocaleController());
+  await localeController.loadSavedLocale();
+  runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+   MyApp({Key? key}) : super(key: key);
+  final LocaleController localeController = Get.find<LocaleController>();
+  Locale _getLocale(String localeString) {
+    if (localeString.contains('_')) {
+      List<String> parts = localeString.split('_');
+      return Locale(parts[0], parts[1]);
+    } else {
+      return Locale(localeString);
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       translations: LocaleString(),
-      locale: const Locale('en', 'US'),
+      locale: _getLocale(localeController.selectedLocale.value),
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -72,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
   updateLanguage(Locale locale) {
     Get.back();
     Get.updateLocale(locale);
+    Get.find<LocaleController>().saveLocale(locale.toString());
   }
 
   buildLanguageDialog(BuildContext context) {
@@ -91,7 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: Text(locale[index]['name']),
                       ),
                       onTap: () {
-                        //print(locale[index]['name']);
                         updateLanguage(locale[index]['locale']);
                       },
                     );
