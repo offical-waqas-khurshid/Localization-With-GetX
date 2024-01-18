@@ -1,0 +1,120 @@
+
+
+
+                    View Of Change Language
+
+Expanded(
+              flex: 0,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15.sp, vertical: 2.sp),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(10.r)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 8.sp),
+                          child: InkWell(
+                            onTap: () {
+                              showBottomSheet(context, "FROM_ACCOUNT", controller);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(color: AppColors.textColor.withOpacity(0.06), borderRadius: BorderRadius.all(Radius.circular(50.r))),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 2.h),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: AppColors.btnColor,
+                                      minRadius: 15.sp,
+                                      child: Icon(
+                                        Icons.language,
+                                        color: AppColors.secondary,
+                                        size: 15.sp,
+                                      ),
+                                    ),
+                                    Expanded(flex: 0, child: SizedBox(width: 20.w)),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                        Text("Languages", style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w400)),
+                                      ]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+
+/// Change Language Function For Search Bar
+  void showBottomSheet(BuildContext context, String accountType, AppSettingController controller) {
+    List<OptionData> options = [];
+    for (int i = 0; i < Languages.supportedLanguages.length; i++) {
+      Languages language = Languages.supportedLanguages[i];
+      options.add(OptionData.withData(language.lable, "", language));
+    }
+
+    Get.bottomSheet(
+      Container(
+        decoration: BoxDecoration(color: Colors.white, border: Border.all(color: AppColors.borderColorLite, width: 1.w), borderRadius: BorderRadius.only(topLeft: Radius.circular(30.r), topRight: Radius.circular(30.r))),
+        margin: EdgeInsets.only(left: 20.sp, right: 20.sp),
+        child: DialogDesign(options, (selectedOption) {
+          Languages language = selectedOption.dataObject as Languages;
+          print("===========" + language.toString());
+          updateLanguage(language.locale);
+        }),
+      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(10.r), topRight: Radius.circular(10.r))),
+    );
+  }
+
+
+
+
+
+
+Controller Code:
+
+
+RxBool isSwitchOn = false.obs;
+/// method change theme on/off
+  void toggleSwitch() {
+    isSwitchOn.value = !isSwitchOn.value;
+  }
+
+  updateLanguage(Locale locale) {
+    Get.back();
+    Get.updateLocale(locale);
+    Get.find<LocaleController>().saveLocale(locale.toString());
+  }
+
+
+
+
+
+class Languages {
+  String lable = "";
+  Locale locale;
+
+  Languages({required this.lable, required this.locale});
+
+  static List<Languages> supportedLanguages = [
+    Languages(lable: "English", locale: const Locale('en', 'US')),
+    Languages(lable: "Arabic", locale: const Locale('ar', 'SA')),
+    Languages(lable: "Urdu", locale: const Locale('ur', 'PK')),
+  ];
+}
